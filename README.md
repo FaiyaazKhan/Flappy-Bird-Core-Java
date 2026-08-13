@@ -77,8 +77,6 @@ Make sure `Bird.png` is in the same directory as the Java file.
 ## 📁 Project Structure
 
 ```text
-FlappyBird/
-│
 ├── FlappyBird.java
 ├── Bird.png
 ├── README.md
