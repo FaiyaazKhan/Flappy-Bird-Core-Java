@@ -2,7 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.Random;
+import javax.imageio.ImageIO;
 
 class FlappyBirdGraphics extends JPanel 
 {
@@ -12,11 +17,14 @@ class FlappyBirdGraphics extends JPanel
     static final int PIPE_WIDTH = 100;
     static final int PIPE_GAP = 150;  
     static final int PIPE_DISTANCE = 300; 
-    static final int BIRD_SIZE = 20;
+    static final int BIRD_SIZE = 40; // bumped up a bit so the sprite is visible
     
     static final int GRAVITY = 1;
     static final int FLAP_STRENGTH = -10;
     static final int PIPE_SPEED = 5;
+
+    // Bird sprite
+    BufferedImage birdImage;
 
     // Game Variables (Bird & Pipes)
     int birdX = SCREEN_WIDTH / 4;
@@ -41,6 +49,18 @@ class FlappyBirdGraphics extends JPanel
     FlappyBirdGraphics() 
 	{
         setFocusable(true);
+
+        // Load the bird sprite once, at startup
+        try 
+		{
+            birdImage = ImageIO.read(new File("bird.png"));
+        } 
+		catch (IOException e) 
+		{
+            System.out.println("Could not load bird.png - make sure it's in the same folder as the .java file. Falling back to a yellow circle.");
+            birdImage = null;
+        }
+
         addKeyListener(new KeyAdapter() 
 		{
             @Override
@@ -135,14 +155,28 @@ class FlappyBirdGraphics extends JPanel
     public void paintComponent(Graphics g) 
 	{
         super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g;
 
         // Background (Sky)
         g.setColor(Color.CYAN);
         g.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-        // Bird (Yellow Circle)
-        g.setColor(Color.YELLOW);
-        g.fillOval(birdX, birdY, BIRD_SIZE, BIRD_SIZE);
+        // Bird - draw the sprite if it loaded, otherwise fall back to a circle
+        if (birdImage != null) 
+		{
+            // Rotate slightly based on velocity, like the real game does
+            double angle = Math.toRadians(Math.max(-25, Math.min(70, birdVelocity * 3)));
+            AffineTransform old = g2d.getTransform();
+            g2d.translate(birdX + BIRD_SIZE / 2, birdY + BIRD_SIZE / 2);
+            g2d.rotate(angle);
+            g2d.drawImage(birdImage, -BIRD_SIZE / 2, -BIRD_SIZE / 2, BIRD_SIZE, BIRD_SIZE, null);
+            g2d.setTransform(old);
+        } 
+		else 
+		{
+            g.setColor(Color.YELLOW);
+            g.fillOval(birdX, birdY, BIRD_SIZE, BIRD_SIZE);
+        }
 
         // Pipes (Green Rectangle)
         g.setColor(Color.GREEN);
@@ -186,4 +220,4 @@ class FlappyBirdGraphics extends JPanel
         frame.setResizable(false);
         frame.setVisible(true);
     }
-} 
+}
